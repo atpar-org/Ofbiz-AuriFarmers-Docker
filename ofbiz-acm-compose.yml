@@ -12,6 +12,7 @@ x-postgres-common:
 
 volumes:
   acm-db-data:
+  acm-content:
 
 services:
   postgres_primary:
@@ -102,18 +103,21 @@ services:
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v3.3.5
+    image: shivain22/aurigraph-farmers-app:v5
     container_name: acm-backend
     restart: always
     ports:
-      - "8080:8080"
+      - "8083:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldbauri:3306/AurigraphFarmers?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: aurigraph
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SECURITY_JWT_SECRET_KEY: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-
+      APP_FILE_TARGET_DIR: /mnt
+      RESOURCE_LOCATION: file:/mnt/content/
+    volumes:
+      - acm-content:/mnt/content
   # ACM Frontend
   frontend:
     image: shivain22/farmer-auri:v5.2
