@@ -103,7 +103,7 @@ services:
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v5
+    image: shivain22/aurigraph-farmers-app:v10
     container_name: acm-backend
     restart: always
     ports:
@@ -114,8 +114,16 @@ services:
       SPRING_DATASOURCE_PASSWORD: aurigraph
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SECURITY_JWT_SECRET_KEY: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-      APP_FILE_TARGET_DIR: /mnt
-      RESOURCE_LOCATION: file:/mnt/content/
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 5GB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 5GB
+      SPRING_SERVLET_MULTIPART_ENABLED: true
+#      AURIGRAPH_FARMERS_OPENAPI_DEV_URL: http://localhost:8085/
+#      APP_FILE_TARGET_DIR: /mnt
+#      RESOURCE_LOCATION: file:/mnt/content/
+
+      aurigraph.farmers.openapi.dev-url: http://localhost:8083/
+      app.file.target.dir: /mnt
+      resource.location: file:/mnt/content/
     volumes:
       - acm-content:/mnt/content
   # ACM Frontend
