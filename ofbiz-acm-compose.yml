@@ -10,10 +10,6 @@ x-postgres-common:
     timeout: 5s
     retries: 5
 
-volumes:
-  acm-db-data:
-  acm-content:
-
 services:
   postgres_primary:
     <<: *postgres-common
@@ -34,6 +30,7 @@ services:
       -c hot_standby_feedback=on
 
     volumes:
+      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
       - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
 
   postgres_replica:
@@ -44,6 +41,8 @@ services:
       PGUSER: atparreplicator
       PGPASSWORD: atparreplicator
       POSTGRES_HOST_AUTH_METHOD: "md5"
+    volumes:
+      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
     command: |
       bash -c "
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
@@ -71,7 +70,7 @@ services:
       MYSQL_ROOT_PASSWORD: aurigraph
       MYSQL_DATABASE: AurigraphFarmers
     volumes:
-      - acm-db-data:/var/lib/mysql
+      - ./data/acm-db-data/mysql:/var/lib/mysql
 
   # Ofbiz Application
   ofbiz:
@@ -125,7 +124,7 @@ services:
       app.file.target.dir: /mnt
       resource.location: file:/mnt/content/
     volumes:
-      - acm-content:/mnt/content
+      - ./data/acm-content:/mnt/content
   # ACM Frontend
   frontend:
     image: shivain22/farmer-auri:v5.2
