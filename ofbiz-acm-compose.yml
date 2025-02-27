@@ -102,7 +102,7 @@ services:
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v10
+    image: shivain22/aurigraph-farmers-app:v11
     container_name: acm-backend
     restart: always
     ports:
