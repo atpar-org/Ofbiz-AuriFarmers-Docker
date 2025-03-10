@@ -114,11 +114,11 @@ services:
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v11
+    image: shivain22/aurigraph-farmers-app:v18
     container_name: acm-backend
     restart: always
     ports:
-      - "8083:8080"
+      - "8005:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldbauri:3306/AurigraphFarmers?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
@@ -132,7 +132,7 @@ services:
 #      APP_FILE_TARGET_DIR: /mnt
 #      RESOURCE_LOCATION: file:/mnt/content/
 
-      aurigraph.farmers.openapi.dev-url: http://localhost:8083/
+      aurigraph.farmers.openapi.dev-url: https://aurigraphfarmers-api.atparui.com
       app.file.target.dir: /mnt
       resource.location: file:/mnt/content/
       twilio.account.sid: AC163c0c85cefaf8f3d7dafb1b90502144
@@ -150,6 +150,7 @@ services:
       - "3005:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://aurigraph-farmers-app:8080
+      NEXT_PUBLIC_OFBIZ_API_URL: http://ofbiz:8089
 
 
 
