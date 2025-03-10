@@ -10,10 +10,6 @@ x-postgres-common:
     timeout: 5s
     retries: 5
 
-volumes:
-  acm-db-data:
-  acm-content:
-
 services:
   postgres_primary:
     <<: *postgres-common
@@ -34,6 +30,7 @@ services:
       -c hot_standby_feedback=on
 
     volumes:
+      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
       - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
 
   postgres_replica:
@@ -44,6 +41,8 @@ services:
       PGUSER: atparreplicator
       PGPASSWORD: atparreplicator
       POSTGRES_HOST_AUTH_METHOD: "md5"
+    volumes:
+      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
     command: |
       bash -c "
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
@@ -71,7 +70,7 @@ services:
       MYSQL_ROOT_PASSWORD: aurigraph
       MYSQL_DATABASE: AurigraphFarmers
     volumes:
-      - acm-db-data:/var/lib/mysql
+      - ./data/acm-db-data/mysql:/var/lib/mysql
 
   # Ofbiz Application
   ofbiz:
@@ -98,16 +97,16 @@ services:
       OFBIZ_POSTGRES_HOST: postgres_primary                    # Hostname of the primary database
       OFBIZ_DATA_LOAD: demo
     ports:
-      - "8553:8443"
-      - "8079:8089"
+      - "8443:8443"
+      - "8089:8089"
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v18
+    image: shivain22/aurigraph-farmers-app:v11
     container_name: acm-backend
     restart: always
     ports:
-      - "8005:8080"
+      - "8083:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysqldbauri:3306/AurigraphFarmers?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: root
@@ -116,26 +115,26 @@ services:
       SECURITY_JWT_SECRET_KEY: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
       SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 5GB
       SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 5GB
-      SPRING_SERVLET_MULTIPART_ENABLED: 'true'
+      SPRING_SERVLET_MULTIPART_ENABLED: true
 #      AURIGRAPH_FARMERS_OPENAPI_DEV_URL: http://localhost:8085/
 #      APP_FILE_TARGET_DIR: /mnt
 #      RESOURCE_LOCATION: file:/mnt/content/
 
-      aurigraph.farmers.openapi.dev-url: https://aurigraphfarmers-api.atparui.com
+      aurigraph.farmers.openapi.dev-url: http://localhost:8083/
       app.file.target.dir: /mnt
       resource.location: file:/mnt/content/
     volumes:
-      - acm-content:/mnt/content
+      - ./data/acm-content:/mnt/content
   # ACM Frontend
   frontend:
-    image: shivain22/auri-farmer:v3.1
+    image: shivain22/farmer-auri:v5.2
     container_name: acm-frontend
     restart: always
     ports:
       - "3005:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://aurigraph-farmers-app:8080
-      NEXT_PUBLIC_OFBIZ_API_URL: http://ofbiz:8089
+
 
 
   # NGINX Reverse Proxy
@@ -144,8 +143,7 @@ services:
     container_name: nginx-proxy
     restart: always
     ports:
-      - "81:80"
-      - "553:443"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
-
