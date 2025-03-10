@@ -100,6 +100,18 @@ services:
       - "8443:8443"
       - "8089:8089"
 
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+
+
   # ACM Backend
   aurigraph-farmers-app:
     image: shivain22/aurigraph-farmers-app:v11
@@ -123,6 +135,10 @@ services:
       aurigraph.farmers.openapi.dev-url: http://localhost:8083/
       app.file.target.dir: /mnt
       resource.location: file:/mnt/content/
+      twilio.account.sid: AC163c0c85cefaf8f3d7dafb1b90502144
+      twilio.auth.token: 3465e4c7b703ccc296ff12ad1ccf31d4
+      twilio.phone.number: +19047340926
+
     volumes:
       - ./data/acm-content:/mnt/content
   # ACM Frontend
