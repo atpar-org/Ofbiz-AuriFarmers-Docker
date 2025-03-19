@@ -10,7 +10,96 @@ x-postgres-common:
     timeout: 5s
     retries: 5
 
+#x-logging: &default-logging
+#  driver: loki
+#  options:
+#    loki-url: 'http://localhost:3100/api/prom/push'
+#    loki-pipeline-stages: |
+#      - multiline:
+#          firstline: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{3}'
+#          max_wait_time: 3s
+#      - regex:
+#          expression: '^(?P<date>\d{4}-\d{2}-\d{2}) (?P<time>\d{2}:\d{2}:\d{2}.\d{3}) (?P<message>(?s:.*))$$'
+
 services:
+#  loki:
+#    extends:
+#      file: ./config/docker/compose/observability.yml
+#      service: loki
+#  prometheus:
+#    extends:
+#      file: ./config/docker/compose/observability.yml
+#      service: prometheus
+#    depends_on:
+#      - loki
+#
+#  grafana:
+#    extends:
+#      file: ./config/docker/compose/observability.yml
+#      service: grafana
+#    depends_on:
+#      - loki
+#
+#  tempo:
+#    extends:
+#      file: ./config/docker/compose/observability.yml
+#      service: tempo
+#    depends_on:
+#      - loki
+
+  db:
+    extends:
+      file: ./config/docker/compose/mariadb.yml
+      service: mariadb
+#    depends_on:
+#      - loki
+#    logging: *default-logging
+
+  web-app:
+    image: shivain22/mifos-web-app:aurigraph
+    restart: always
+    environment:
+      - FINERACT_API_URLS=https://finos-api.atparui.com
+      - FINERACT_API_URL=https://finos-api.atparui.com
+      - FINERACT_API_PROVIDER=/fineract-provider/api
+      - FINERACT_API_VERSION=/v1
+      - FINERACT_PLATFORM_TENANT_IDENTIFIER=default
+      - MIFOS_DEFAULT_LANGUAGE=en-US
+      - MIFOS_SUPPORTED_LANGUAGES=cs-CS,de-DE,en-US,es-MX,fr-FR,it-IT,ko-KO,lt-LT,lv-LV,ne-NE,pt-PT,sw-SW
+      - MIFOS_PRELOAD_CLIENTS=true
+      - MIFOS_DEFAULT_CHAR_DELIMITER=,
+    ports:
+      - 4200:80
+
+  fineract:
+    container_name: fineract-development
+    extends:
+      file: ./config/docker/compose/fineract.yml
+      service: fineract
+    ports:
+      - "8443:8443"
+      - "5000:5000"
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+#      loki:
+#        condition: service_started
+    environment:
+      - FINERACT_SERVER_SSL_ENABLED=false
+      - FINERACT_SERVER_PORT=8080
+    env_file:
+      - ./config/docker/env/aws.env
+      - ./config/docker/env/fineract.env
+      - ./config/docker/env/fineract-common.env
+      - ./config/docker/env/fineract-mariadb.env
+      - ./config/docker/env/tracing.env
+      - ./config/docker/env/oltp.env
+      - ./config/docker/env/prometheus.env
+      # - ./config/docker/env/cloudwatch.env
+      - ./config/docker/env/debug.env
+#    logging: *default-logging
+
   postgres_primary:
     <<: *postgres-common
     ports:
@@ -30,7 +119,7 @@ services:
       -c hot_standby_feedback=on
 
     volumes:
-      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
+#      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
       - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
 
   postgres_replica:
@@ -41,8 +130,8 @@ services:
       PGUSER: atparreplicator
       PGPASSWORD: atparreplicator
       POSTGRES_HOST_AUTH_METHOD: "md5"
-    volumes:
-      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
+#    volumes:
+#      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
     command: |
       bash -c "
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
@@ -99,6 +188,8 @@ services:
     ports:
       - "8553:8443"
       - "8079:8089"
+    depends_on:
+      - postgres_primary
 
 
   redis:
@@ -109,7 +200,7 @@ services:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
-      - redisdata:/data
+      - ./redisdata:/data
 
 
   # ACM Backend
@@ -127,7 +218,7 @@ services:
       SECURITY_JWT_SECRET_KEY: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
       SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 5GB
       SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 5GB
-      SPRING_SERVLET_MULTIPART_ENABLED: true
+      SPRING_SERVLET_MULTIPART_ENABLED: 'true'
 #      AURIGRAPH_FARMERS_OPENAPI_DEV_URL: http://localhost:8085/
 #      APP_FILE_TARGET_DIR: /mnt
 #      RESOURCE_LOCATION: file:/mnt/content/
