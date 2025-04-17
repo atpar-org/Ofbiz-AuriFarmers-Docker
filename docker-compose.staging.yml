@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres_primary:
+    env_file:
+      - .env.staging
+
+  postgres_replica:
+    env_file:
+      - .env.staging
+
+  mysqldbauri:
+    env_file:
+      - .env.staging
+
+  ofbiz:
+    env_file:
+      - .env.staging
+
+  redis:
+    env_file:
+      - .env.staging
+
+  aurigraph-farmers-app:
+    env_file:
+      - .env.staging
+
+  frontend:
+    env_file:
+      - .env.staging

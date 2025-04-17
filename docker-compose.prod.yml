@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgres_primary:
+    env_file:
+      - .env.prod
+
+  postgres_replica:
+    env_file:
+      - .env.prod
+
+  mysqldbauri:
+    env_file:
+      - .env.prod
+
+  ofbiz:
+    env_file:
+      - .env.prod
+
+  redis:
+    env_file:
+      - .env.prod
+
+  aurigraph-farmers-app:
+    env_file:
+      - .env.prod
+
+  frontend:
+    env_file:
+      - .env.prod

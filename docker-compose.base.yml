@@ -1,4 +1,5 @@
 version: '3.8'
+
 x-postgres-common:
   &postgres-common
   image: postgres:14-alpine
@@ -22,38 +23,38 @@ x-postgres-common:
 #          expression: '^(?P<date>\d{4}-\d{2}-\d{2}) (?P<time>\d{2}:\d{2}:\d{2}.\d{3}) (?P<message>(?s:.*))$$'
 
 services:
-#  loki:
-#    extends:
-#      file: ./config/docker/compose/observability.yml
-#      service: loki
-#  prometheus:
-#    extends:
-#      file: ./config/docker/compose/observability.yml
-#      service: prometheus
-#    depends_on:
-#      - loki
-#
-#  grafana:
-#    extends:
-#      file: ./config/docker/compose/observability.yml
-#      service: grafana
-#    depends_on:
-#      - loki
-#
-#  tempo:
-#    extends:
-#      file: ./config/docker/compose/observability.yml
-#      service: tempo
-#    depends_on:
-#      - loki
+  #  loki:
+  #    extends:
+  #      file: ./config/docker/compose/observability.yml
+  #      service: loki
+  #  prometheus:
+  #    extends:
+  #      file: ./config/docker/compose/observability.yml
+  #      service: prometheus
+  #    depends_on:
+  #      - loki
+  #
+  #  grafana:
+  #    extends:
+  #      file: ./config/docker/compose/observability.yml
+  #      service: grafana
+  #    depends_on:
+  #      - loki
+  #
+  #  tempo:
+  #    extends:
+  #      file: ./config/docker/compose/observability.yml
+  #      service: tempo
+  #    depends_on:
+  #      - loki
 
   db:
     extends:
       file: ./config/docker/compose/mariadb.yml
       service: mariadb
-#    depends_on:
-#      - loki
-#    logging: *default-logging
+  #    depends_on:
+  #      - loki
+  #    logging: *default-logging
 
   web-app:
     image: shivain22/mifos-web-app:aurigraph
@@ -83,8 +84,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-#      loki:
-#        condition: service_started
+    #      loki:
+    #        condition: service_started
     environment:
       - FINERACT_SERVER_SSL_ENABLED=false
       - FINERACT_SERVER_PORT=8080
@@ -98,16 +99,16 @@ services:
       - ./config/docker/env/prometheus.env
       # - ./config/docker/env/cloudwatch.env
       - ./config/docker/env/debug.env
-#    logging: *default-logging
+  #    logging: *default-logging
 
   postgres_primary:
     <<: *postgres-common
     ports:
-      - 5432:5432
+      - "${POSTGRES_PRIMARY_PORT}:5432"
     environment:
-      POSTGRES_USER: ofbiz
-      POSTGRES_DB: ofbiz
-      POSTGRES_PASSWORD: ofbiz
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost replication all 0.0.0.0/0 md5"
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     command: |
@@ -119,19 +120,19 @@ services:
       -c hot_standby_feedback=on
 
     volumes:
-#      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
+      #      - ./data/acm-db-data/postgres:/var/lib/postgresql/data
       - ./00_init.sql:/docker-entrypoint-initdb.d/00_init.sql
 
   postgres_replica:
     <<: *postgres-common
     ports:
-      - 5433:5432
+      - "${POSTGRES_REPLICA_PORT}:5432"
     environment:
-      PGUSER: atparreplicator
-      PGPASSWORD: atparreplicator
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
       POSTGRES_HOST_AUTH_METHOD: "md5"
-#    volumes:
-#      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
+    #    volumes:
+    #      - ./data/acm-db-data/postgres-replica:/var/lib/postgresql/data
     command: |
       bash -c "
       until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=postgres_primary --port=5432
@@ -154,10 +155,10 @@ services:
     container_name: acm-db
     restart: always
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: aurigraph
-      MYSQL_DATABASE: AurigraphFarmers
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
       - ./data/acm-db-data/mysql:/var/lib/mysql
 
@@ -167,27 +168,25 @@ services:
     container_name: ofbiz-app
     restart: always
     environment:
-#      DEFAULT_HOST: localhost
-#      VIRTUAL_HOST: localhost
-#      LETSENCRYPT_HOST: localhost
-#      LETSENCRYPT_EMAIL: admin@example.com
-      OFBIZ_POSTGRES_OFBIZ_DB: ofbiz                   # From postgres_primary
-      OFBIZ_POSTGRES_OFBIZ_USER: ofbiz                         # From postgres_primary
-      OFBIZ_POSTGRES_OFBIZ_PASSWORD: ofbiz                     # From postgres_primary
+      #      DEFAULT_HOST: localhost
+      #      VIRTUAL_HOST: localhost
+      #      LETSENCRYPT_HOST: localhost
+      #      LETSENCRYPT_EMAIL: admin@example.com
+      OFBIZ_POSTGRES_OFBIZ_DB: ${OFBIZ_POSTGRES_OFBIZ_DB}
+      OFBIZ_POSTGRES_OFBIZ_USER: ${OFBIZ_POSTGRES_OFBIZ_USER}
+      OFBIZ_POSTGRES_OFBIZ_PASSWORD: ${OFBIZ_POSTGRES_OFBIZ_PASSWORD}
+      OFBIZ_POSTGRES_OLAP_DB: ${OFBIZ_POSTGRES_OLAP_DB}
+      OFBIZ_POSTGRES_OLAP_USER: ${OFBIZ_POSTGRES_OLAP_USER}
+      OFBIZ_POSTGRES_OLAP_PASSWORD: ${OFBIZ_POSTGRES_OLAP_PASSWORD}
+      OFBIZ_POSTGRES_TENANT_DB: ${OFBIZ_POSTGRES_TENANT_DB}
+      OFBIZ_POSTGRES_TENANT_USER: ${OFBIZ_POSTGRES_TENANT_USER}
+      OFBIZ_POSTGRES_TENANT_PASSWORD: ${OFBIZ_POSTGRES_TENANT_PASSWORD}
+      OFBIZ_POSTGRES_HOST: ${OFBIZ_POSTGRES_HOST}
+      OFBIZ_DATA_LOAD: ${OFBIZ_DATA_LOAD}
 
-      OFBIZ_POSTGRES_OLAP_DB: ofbiz_olap                    # Add specific OLAP database name
-      OFBIZ_POSTGRES_OLAP_USER: ofbizolap                 # From postgres_primary
-      OFBIZ_POSTGRES_OLAP_PASSWORD: ofbizolap
-
-      OFBIZ_POSTGRES_TENANT_DB: ofbiztenant                # Add specific tenant database name
-      OFBIZ_POSTGRES_TENANT_USER: ofbiztenant
-      OFBIZ_POSTGRES_TENANT_PASSWORD: ofbiztenant
-
-      OFBIZ_POSTGRES_HOST: postgres_primary                    # Hostname of the primary database
-      OFBIZ_DATA_LOAD: demo
     ports:
-      - "8553:8443"
-      - "8079:8089"
+      - "${OFBIZ_SSL_PORT}:8443"
+      - "${OFBIZ_HTTP_PORT}:8089"
     depends_on:
       - postgres_primary
 
@@ -197,7 +196,7 @@ services:
     container_name: redis
     restart: always
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - ./redisdata:/data
@@ -209,26 +208,37 @@ services:
     container_name: acm-backend
     restart: always
     ports:
-      - "8005:8080"
+      - "${BACKEND_PORT}:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldbauri:3306/AurigraphFarmers?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: aurigraph
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SECURITY_JWT_SECRET_KEY: 3cfa76ef14937c1c0ea519f8fc057a80fcd04a7420f8e8bcd0a7567c272e007b
-      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 5GB
-      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 5GB
-      SPRING_SERVLET_MULTIPART_ENABLED: 'true'
-#      AURIGRAPH_FARMERS_OPENAPI_DEV_URL: http://localhost:8085/
-#      APP_FILE_TARGET_DIR: /mnt
-#      RESOURCE_LOCATION: file:/mnt/content/
+      SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SECURITY_JWT_SECRET_KEY: ${SECURITY_JWT_SECRET_KEY}
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE}
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE}
+      SPRING_SERVLET_MULTIPART_ENABLED: ${SPRING_SERVLET_MULTIPART_ENABLED}
+      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
+      aurigraph.farmers.openapi.dev-url: ${AURIGRAPH_FARMERS_OPENAPI_DEV_URL}
+      app.file.target.dir: ${APP_FILE_TARGET_DIR}
+      resource.location: ${RESOURCE_LOCATION}
+      twilio.account.sid: ${TWILIO_ACCOUNT_SID}
+      twilio.auth.token: ${TWILIO_AUTH_TOKEN}
+      twilio.phone.number: ${TWILIO_PHONE_NUMBER}
+      digiLocker.client.id: ${DIGILOCKER_CLIENT_ID}
+      digiLocker.client.secret: ${DIGILOCKER_CLIENT_SECRET}
+      digiLocker.redirect.uri: ${DIGILOCKER_REDIRECT_URI}
+      digiLocker.token.url: ${DIGILOCKER_TOKEN_URL}
+      digiLocker.docs.url.issued: ${DIGILOCKER_DOCS_URL_ISSUED}
+      digiLocker.docs.url.e-aadhaar: ${DIGILOCKER_DOCS_URL_E-AADHAAR}
+      digiLocker.docs.by.uri: ${DIGILOCKER_DOCS_BY_URI}
+      server.url: ${SERVER_URL}
+      server.port: ${SERVER_PORT}
+      digilocker.revoke: ${DIGILOCKER_REVOKE}
 
-      aurigraph.farmers.openapi.dev-url: https://aurigraphfarmers-api.atparui.com
-      app.file.target.dir: /mnt
-      resource.location: file:/mnt/content/
-      twilio.account.sid: AC163c0c85cefaf8f3d7dafb1b90502144
-      twilio.auth.token: 3465e4c7b703ccc296ff12ad1ccf31d4
-      twilio.phone.number: +19047340926
 
     volumes:
       - ./data/acm-content:/mnt/content
@@ -240,8 +250,8 @@ services:
     ports:
       - "3005:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://aurigraph-farmers-app:8080
-      NEXT_PUBLIC_OFBIZ_API_URL: http://ofbiz:8089
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_OFBIZ_API_URL: ${NEXT_PUBLIC_OFBIZ_API_URL}
 
 
 
@@ -250,8 +260,8 @@ services:
     image: nginx:latest
     container_name: nginx-proxy
     restart: always
-#    ports:
-#      - "80:80"
-#      - "443:443"
+    #    ports:
+    #      - "80:80"
+    #      - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
