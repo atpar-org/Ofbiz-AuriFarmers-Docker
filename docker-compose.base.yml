@@ -212,11 +212,12 @@ services:
     environment:
       SPRING_APPLICATION_NAME: ${SPRING_APPLICATION_NAME}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldbauri:3306/${MYSQL_DATABASE}?serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
       SECURITY_JWT_SECRET_KEY: ${SECURITY_JWT_SECRET_KEY}
+      SECURITY_JWT_EXPIRATION-TIME: ${SECURITY_JWT_EXPIRATION_TIME}
       SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE}
       SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE}
       SPRING_SERVLET_MULTIPART_ENABLED: ${SPRING_SERVLET_MULTIPART_ENABLED}
@@ -233,7 +234,7 @@ services:
       digiLocker.redirect.uri: ${DIGILOCKER_REDIRECT_URI}
       digiLocker.token.url: ${DIGILOCKER_TOKEN_URL}
       digiLocker.docs.url.issued: ${DIGILOCKER_DOCS_URL_ISSUED}
-      digiLocker.docs.url.e-aadhaar: ${DIGILOCKER_DOCS_URL_E-AADHAAR}
+      digiLocker.docs.url.e-aadhaar: ${DIGILOCKER_DOCS_URL_E_AADHAAR}
       digiLocker.docs.by.uri: ${DIGILOCKER_DOCS_BY_URI}
       server.url: ${SERVER_URL}
       server.port: ${SERVER_PORT}
@@ -244,7 +245,7 @@ services:
       - ./data/acm-content:/mnt/content
   # ACM Frontend
   frontend:
-    image: shivain22/farmer-auri:v6.2
+    image: shivain22/auri-farmer:v6.2
     container_name: acm-frontend
     restart: always
     ports:

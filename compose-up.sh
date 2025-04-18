@@ -12,9 +12,22 @@ fi
 
 # Compose files
 COMPOSE_FILE="docker-compose.$PROFILE.yml"
+ENV_FILE=".env.$PROFILE"
+
+# Check if .env file exists
+if [[ ! -f "$ENV_FILE" ]]; then
+  echo "❌ Environment file $ENV_FILE not found!"
+  exit 1
+fi
+
+# Export env vars from the file (so they are available to docker-compose)
+set -o allexport
+source "$ENV_FILE"
+set +o allexport
 
 # Start message
 echo "🚀 Starting Docker Compose with profile: $PROFILE"
+echo "📦 Using env file: $ENV_FILE"
 echo "🔧 Additional options: $@"
 
 # Run docker-compose with any additional args passed
