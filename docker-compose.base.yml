@@ -164,7 +164,7 @@ services:
 
   # Ofbiz Application
   ofbiz:
-    image: shivain22/ofbiz-docker:2-03-25-6
+    image: shivain22/ofbiz-docker:12-03-25-6
     container_name: ofbiz-app
     restart: always
     environment:

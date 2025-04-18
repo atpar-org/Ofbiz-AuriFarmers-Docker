@@ -29,5 +29,5 @@ services:
       test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
       timeout: 10s
       retries: 10
-    ports:
-      - "3306:3306"
+#    ports:
+#      - "3306:3306"

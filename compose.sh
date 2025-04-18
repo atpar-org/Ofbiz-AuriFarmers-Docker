@@ -30,5 +30,14 @@ echo "🚀 Starting Docker Compose with profile: $PROFILE"
 echo "📦 Using env file: $ENV_FILE"
 echo "🔧 Additional options: $@"
 
+# Handle special case: remove specific container
+if [[ "$1" == "remove" && -n "$2" ]]; then
+  SERVICE=$2
+  echo "🛑 Stopping and removing service: $SERVICE"
+  docker-compose -f docker-compose.base.yml -f $COMPOSE_FILE stop $SERVICE
+  docker-compose -f docker-compose.base.yml -f $COMPOSE_FILE rm -f $SERVICE
+  exit 0
+fi
+
 # Run docker-compose with any additional args passed
-docker-compose -f docker-compose.base.yml -f $COMPOSE_FILE up "$@"
+docker-compose -f docker-compose.base.yml -f $COMPOSE_FILE "$@"
