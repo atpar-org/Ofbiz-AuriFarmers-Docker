@@ -164,7 +164,7 @@ services:
 
   # Ofbiz Application
   ofbiz:
-    image: shivain22/ofbiz-docker:latest
+    image: shivain22/ofbiz-docker:2-03-25-6
     container_name: ofbiz-app
     restart: always
     environment:
@@ -204,7 +204,7 @@ services:
 
   # ACM Backend
   aurigraph-farmers-app:
-    image: shivain22/aurigraph-farmers-app:v18
+    image: shivain22/aurigraph-farmers-app:v29
     container_name: acm-backend
     restart: always
     ports:
@@ -244,7 +244,7 @@ services:
       - ./data/acm-content:/mnt/content
   # ACM Frontend
   frontend:
-    image: shivain22/farmer-auri:v5.2
+    image: shivain22/farmer-auri:v6.2
     container_name: acm-frontend
     restart: always
     ports:
